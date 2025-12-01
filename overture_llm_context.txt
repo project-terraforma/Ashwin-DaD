@@ -1,0 +1,779 @@
+================================================================================
+OVERTURE MAPS DATA - LLM EXPLORATION GUIDE
+================================================================================
+Release Version: 2025-08-20.1
+Document Purpose: Enable natural language querying of Overture Maps data
+Last Updated: 2025-11-26
+
+<<<INSTRUCTIONS_START>>>
+
+## YOUR ROLE
+You are a data analyst assistant helping users understand and explore Overture Maps
+data. This document contains comprehensive statistics, schema definitions, and
+context about the Overture Maps Foundation's open geospatial datasets.
+
+## HOW TO USE THIS DOCUMENT
+- Answer user questions about data distributions, coverage, and characteristics
+- Provide specific numbers, percentages, and comparisons when available
+- Reference the schema definitions to explain data structure
+- Use the statistics sections to support your analysis
+- Be precise and cite specific metrics from this document
+
+## KEY CONSTRAINTS
+- Data is from release 2025-08-20.1 only
+- All statistics represent aggregated counts across multiple data sources
+- Some themes may have data quality variations by geographic region
+- Confidence scores in Places theme range from 0.0 (closed/doesn't exist) to 1.0 (verified)
+
+<<<INSTRUCTIONS_END>>>
+
+
+================================================================================
+## OVERTURE MAPS FOUNDATION OVERVIEW
+================================================================================
+
+Overture Maps Foundation is an open data initiative that provides free,
+interoperable geospatial datasets for mapping applications worldwide. The data
+is released as GeoParquet files with a JSON schema definition, using GeoJSON
+as the canonical geospatial format.
+
+### THE SIX DATA THEMES
+
+**1. ADDRESSES**
+   - Over 446 million address points from 34 countries worldwide
+   - Simplified, worldwide address schema based primarily on OpenAddresses
+   - Includes hierarchical administrative levels (address_level_1, 2, 3)
+
+**2. BUILDINGS**
+   - 2.54 billion building footprints globally
+   - Categorized by use (residential, commercial, industrial, etc.)
+   - Sources: Google Open Buildings, Microsoft ML Buildings, OpenStreetMap
+   - Includes detailed attributes: height, floors, construction details
+
+**3. PLACES**
+   - 65.3 million points of interest worldwide
+   - Businesses, landmarks, amenities, and services
+   - Confidence scores indicate data quality (0.0 to 1.0)
+   - Primary sources: Meta, Microsoft
+
+**4. DIVISIONS**
+   - 5.5 million administrative boundaries
+   - Nine administrative levels: country → dependency → region → county →
+     localadmin → locality → macrohood → neighborhood → microhood
+   - Translated into 40+ languages
+   - Includes population data and administrative hierarchies
+
+**5. TRANSPORTATION**
+   - 710 million transportation features
+   - 327 million road/rail/water segments
+   - 383 million connectors (intersection points)
+   - Detailed routing attributes: speed limits, access restrictions, surface types
+
+**6. BASE**
+   - 758 million contextual features
+   - Six feature types: land, water, land_cover, land_use, infrastructure, bathymetry
+   - Includes natural features (forests, streams) and infrastructure (bridges, power lines)
+   - Land cover from ESA WorldCover 2020 (10m resolution)
+
+
+================================================================================
+<<<SCHEMA_START>>>
+## SCHEMA REFERENCE - GROUPING COLUMNS
+================================================================================
+
+This section defines the key columns used to categorize and group data across
+all themes. Understanding these columns is essential for querying the data.
+
+---
+### UNIVERSAL COLUMNS (All Themes)
+---
+
+**datasets**
+Definition: The original source(s) of the feature data
+Type: String (comma-separated for multiple sources)
+Common Values:
+  - OpenStreetMap: Community-contributed geographic data
+  - Microsoft ML Buildings / Google Open Buildings: Machine learning-derived footprints
+  - Meta: Business and place data
+  - ESA WorldCover: European Space Agency satellite imagery
+  - Esri Community Maps, TomTom, USGS Lidar, and others
+
+**change_type**
+Definition: Feature's status compared to the previous Overture release
+Type: Enumerated string
+Possible Values:
+  - unchanged: Feature exists in both releases with identical data
+  - data_changed: Feature exists in both but has modified attributes
+  - added: New feature in this release
+  - removed: Feature existed in previous release but not current
+
+---
+### ADDRESSES THEME COLUMNS
+---
+
+**country**
+Definition: ISO 3166-1 Alpha-2 country code (e.g., US, BR, IN)
+Type: 2-character string
+Usage: Identifies the country where the address is located
+
+**address_level_1**
+Definition: First-level administrative division (state/province)
+Type: String
+Examples: California, Oaxaca, Ontario, Queensland
+Notes: Meaning varies by country (US: state, Canada: province, etc.)
+
+**address_level_2**
+Definition: Second-level administrative division (county/municipality)
+Type: String
+Examples: Los Angeles County, Santa Cruz Amilpas
+Notes: May represent city, county, or district depending on country
+
+**address_level_3**
+Definition: Third-level administrative division (neighborhood/district)
+Type: String
+Notes: Optional; not all countries use three address levels
+
+---
+### BUILDINGS THEME COLUMNS
+---
+
+**subtype**
+Definition: Broad building category representing current or intended use
+Type: Enumerated string
+All Values (13 total):
+  - residential: Housing for people (80.80% of buildings)
+  - commercial: Retail, offices, businesses
+  - industrial: Manufacturing, factories, warehouses
+  - agricultural: Farm buildings, barns
+  - education: Schools, colleges, universities
+  - religious: Churches, temples, mosques
+  - civic: Government buildings, libraries, civic centers
+  - service: Utility buildings
+  - transportation: Transit stations, parking structures
+  - medical: Hospitals, clinics
+  - entertainment: Stadiums, theaters, venues
+  - outbuilding: Sheds, garages, auxiliary structures
+  - military: Defense installations
+
+**class**
+Definition: More specific classification of building purpose
+Type: Enumerated string
+Note: 87 different classes exist
+Most Common Classes:
+  - house (46.21%), residential (11.64%), detached (6.74%)
+  - garage (5.70%), apartments (5.42%), shed (3.09%)
+  - industrial (2.58%), hut (1.81%), farm_auxiliary (1.67%)
+
+---
+### PLACES THEME COLUMNS
+---
+
+**place_countries**
+Definition: ISO 3166-1 Alpha-2 code for the country where place is located
+Type: 2-character string
+Coverage: 250 countries represented
+Top Countries: US (20.15%), BR (7.85%), IN (6.07%), MX (4.36%)
+
+**primary_category**
+Definition: Main category describing the place's purpose or service
+Type: String
+Note: 2,079 unique categories exist
+Most Common Categories:
+  - professional_services (2.40%)
+  - restaurant (2.35%)
+  - beauty_salon (2.34%)
+  - hotel (2.19%)
+  - shopping (2.00%)
+  - landmark_and_historical_building (1.54%)
+  - church_cathedral (1.30%)
+  - automotive_repair (1.30%)
+  - hospital (1.21%)
+  - clothing_store (1.20%)
+
+**confidence**
+Definition: Numerical score indicating certainty of place existence
+Type: Float (0.0 to 1.0)
+Interpretation:
+  - 1.0: Verified, confirmed existence
+  - 0.9: High confidence (35.51% of places)
+  - 0.5-0.8: Moderate confidence
+  - 0.3-0.4: Lower confidence
+  - 0.0: Place permanently closed or doesn't exist
+Note: This is NOT operating hours; it's existence certainty
+
+---
+### DIVISIONS THEME COLUMNS
+---
+
+**subtype**
+Definition: Administrative level of the division
+Type: Enumerated string
+All Values (9 total, from largest to smallest):
+  - country: Sovereign nations (0.02%)
+  - dependency: Dependent territories (0.00%)
+  - region: States, provinces, regions (0.30%)
+  - county: Counties, districts (2.83%)
+  - localadmin: Local administrative areas (0.69%)
+  - locality: Cities, towns, villages (70.01% - largest category)
+  - macrohood: Large neighborhoods (3.49%)
+  - neighborhood: Standard neighborhoods (17.45%)
+  - microhood: Small neighborhoods, blocks (5.21%)
+
+**class**
+Definition: Categorizes human settlements by size/importance
+Type: Enumerated string
+All Values (6 total):
+  - hamlet: Very small settlement (37.49%)
+  - village: Small rural settlement (33.98%)
+  - town: Medium settlement (2.37%)
+  - city: Large urban area (0.27%)
+  - megacity: Extremely large city
+  - land: Non-maritime division (25.75%)
+  - maritime: Water-based division (0.14%)
+
+**country**
+Definition: ISO 3166-1 Alpha-2 code for the country containing this division
+Type: 2-character string
+Coverage: 271 countries
+Top Countries: CN (9.19%), IN (7.23%), FR (6.60%), RU (6.03%), US (4.81%)
+
+---
+### TRANSPORTATION THEME COLUMNS
+---
+
+**subtype**
+Definition: Type of transportation pathway
+Type: Enumerated string
+All Values (3 total):
+  - road: Any kind of road, street, path, or walkway (99.39%)
+  - rail: Railway tracks (0.60%)
+  - water: Ferry routes, navigable waterways (0.01%)
+
+**class**
+Definition: Required classification showing road hierarchy or rail type
+Type: Enumerated string
+For Roads (road subtype):
+  - residential (38.44%): Residential streets
+  - service (17.63%): Service roads, alleys
+  - unclassified (9.05%): Minor roads
+  - track (7.70%): Unpaved tracks
+  - footway (6.61%): Pedestrian paths
+  - tertiary (6.15%): Minor through roads
+  - path (4.11%): Walking/cycling paths
+  - secondary (3.40%): Medium-importance roads
+  - primary (2.19%): Major roads
+  - trunk (1.22%): High-speed roads
+  - motorway, living_street, cycleway, bridleway, steps, and others
+
+For Rails (rail subtype):
+  - standard_gauge (0.44%): Standard railway gauge
+  - funicular, light_rail, monorail, narrow_gauge, subway, tram, unknown
+
+**subclass**
+Definition: Optional refinement of road class
+Type: Enumerated string
+All Values (7 total):
+  - driveway (50.72%): Private access to buildings
+  - parking_aisle (19.27%): Parking lot lanes
+  - sidewalk (10.77%): Pedestrian sidewalks
+  - link (7.22%): Connecting ramps, slip roads
+  - crosswalk (6.67%): Pedestrian crossings
+  - alley (5.18%): Narrow service lanes
+  - cycle_crossing (0.17%): Bicycle crossings
+
+---
+### BASE THEME COLUMNS
+---
+
+**subtype**
+Definition: Broad category of natural or infrastructure feature
+Type: String
+Note: 67 unique subtypes exist
+Most Common Subtypes:
+  - power (11.68%): Electrical infrastructure
+  - tree (8.37%): Individual trees
+  - barrier (8.02%): Fences, walls, gates
+  - forest (7.21%): Wooded areas
+  - stream (7.17%): Flowing water
+  - shrub (6.16%): Shrubland vegetation
+  - transportation (5.97%): Transport infrastructure
+  - water (4.56%): Water bodies
+  - agriculture (4.55%): Farmland
+  - transit (4.48%): Transit infrastructure
+
+**class**
+Definition: Specific type within the subtype category
+Type: String
+Note: 339 unique classes exist
+Most Common Classes:
+  - tree (9.42%), stream (8.57%)
+  - power_tower (5.50%), power_pole (5.40%)
+  - water (5.09%), wood (3.63%)
+  - crossing (3.57%), farmland (3.39%)
+  - residential (3.12%), fence (2.69%)
+
+<<<SCHEMA_END>>>
+
+
+================================================================================
+## THEME STATISTICS: ADDRESSES
+================================================================================
+
+**Total Features**: 446,544,475 addresses
+
+**Release Comparison** (vs. baseline):
+  - Total Change: 0.00%
+  - Added: 0 (0.00%)
+  - Removed: 0 (0.00%)
+  - Data Changed: 0 (0.00%)
+  - Unchanged: 446,544,475 (100.00%)
+
+**Data Sources**:
+  - Primary: OpenAddresses, AddressForAll, INEGI
+
+**Geographic Coverage**:
+  - Countries Represented: 34 countries
+  - Note: Coverage varies significantly by country
+  - US, Mexico, and European countries have strong representation
+
+**Data Characteristics**:
+  - Administrative hierarchy depth varies by country
+  - US: typically 2 levels (state + municipality)
+  - Other countries: may have 1-3 levels depending on governance structure
+
+
+================================================================================
+## THEME STATISTICS: BUILDINGS
+================================================================================
+
+**Total Features**: 2,539,170,484 buildings + 3,383,176 building parts
+
+**Buildings by Type**:
+  - Residential: 219,306,638 (80.80%) - DOMINANT CATEGORY
+  - Outbuilding: 15,833,550 (5.83%)
+  - Commercial: 9,052,934 (3.34%)
+  - Agricultural: 8,685,900 (3.20%)
+  - Industrial: 7,115,516 (2.62%)
+  - Education: 3,412,974 (1.26%)
+  - Religious: 2,179,864 (0.80%)
+  - Civic: 2,088,916 (0.77%)
+  - Other categories: <1% each
+
+**Buildings by Specific Class** (Top 10):
+  - House: 123,719,738 (46.21%) - Nearly HALF of all buildings
+  - Residential (generic): 31,177,338 (11.64%)
+  - Detached: 18,047,488 (6.74%)
+  - Garage: 15,261,214 (5.70%)
+  - Apartments: 14,511,368 (5.42%)
+  - Shed: 8,276,580 (3.09%)
+  - Industrial: 6,906,754 (2.58%)
+  - Hut: 4,833,798 (1.81%)
+  - Farm Auxiliary: 4,470,508 (1.67%)
+  - Roof: 4,384,542 (1.64%)
+
+**Data Sources**:
+  - Google Open Buildings: 1,843,960,304 (36.29%)
+  - Microsoft ML Buildings: 1,439,444,068 (28.33%)
+  - OpenStreetMap: 1,132,073,362 (22.28%)
+  - doi:10.5281/zenodo.8174931: 426,590,140 (8.39%)
+  - Mixed sources: 4.71%
+
+**Release Comparison** (vs. baseline):
+  - Total Change: 0.00% (count unchanged)
+  - Added: 25 (0.00%)
+  - Removed: 25 (0.00%)
+  - Data Changed: 720,057,849 (28.36%) - SIGNIFICANT attribute updates
+  - Unchanged: 1,819,112,610 (71.64%)
+
+**Key Insights**:
+  - Residential buildings dominate globally
+  - Multiple data sources provide redundancy and validation
+  - 28% of buildings had data updates in this release (e.g., height, attributes)
+
+
+================================================================================
+## THEME STATISTICS: PLACES
+================================================================================
+
+**Total Features**: 65,342,823 places
+
+**Places by Country** (Top 15):
+  - United States: 13,160,925 (20.15%) - HIGHEST concentration
+  - Brazil: 5,127,453 (7.85%)
+  - India: 3,967,339 (6.07%)
+  - Mexico: 2,848,443 (4.36%)
+  - United Kingdom: 2,481,563 (3.80%)
+  - Germany: 2,383,516 (3.65%)
+  - Japan: 2,248,728 (3.44%)
+  - Italy: 2,207,980 (3.38%)
+  - Indonesia: 1,910,544 (2.93%)
+  - Thailand: 1,853,935 (2.84%)
+  - France: 1,834,343 (2.81%)
+  - Turkey: 1,618,774 (2.48%)
+  - Spain: 1,544,503 (2.36%)
+  - Vietnam: 1,447,786 (2.22%)
+  - Canada: 1,390,174 (2.13%)
+  - Remaining 235 countries: ~38%
+
+**Places by Category** (Top 15):
+Note: Distribution is very diverse - top category is only 2.40%
+  - Professional Services: 1,571,035 (2.40%)
+  - Restaurant: 1,535,313 (2.35%)
+  - Beauty Salon: 1,526,339 (2.34%)
+  - Hotel: 1,431,519 (2.19%)
+  - Shopping: 1,303,762 (2.00%)
+  - Landmark & Historical Building: 1,004,723 (1.54%)
+  - Church/Cathedral: 850,230 (1.30%)
+  - Automotive Repair: 848,540 (1.30%)
+  - Hospital: 789,348 (1.21%)
+  - Clothing Store: 784,235 (1.20%)
+  - Community Services/Non-profits: 735,289 (1.13%)
+  - Beauty & Spa: 718,249 (1.10%)
+  - School: 703,031 (1.08%)
+  - Real Estate: 696,367 (1.07%)
+  - Bar: 656,098 (1.00%)
+  - Remaining 2,064 categories: ~78%
+
+**Confidence Score Distribution**:
+  - 0.9 (High): 23,200,027 (35.51%) - LARGEST segment
+  - 1.0 (Verified): 13,373,497 (20.47%)
+  - 0.8: 7,221,439 (11.05%)
+  - 0.5 (Medium): 7,360,406 (11.26%)
+  - 0.4: 4,063,858 (6.22%)
+  - 0.3 (Lower): 7,568,312 (11.58%)
+  - 0.7: 2,493,009 (3.82%)
+  - 0.1 and below: <0.1%
+
+  Summary: 56% of places have high confidence (0.8-1.0)
+
+**Data Sources**:
+  - Meta: 56,659,810 (86.71%) - DOMINANT source
+  - Microsoft: 5,369,523 (8.22%)
+  - Microsoft + Meta: 3,169,090 (4.85%)
+  - Other combinations: <0.2%
+
+**Release Comparison** (vs. baseline):
+  - All features: Unchanged (100.00%)
+
+**Key Insights**:
+  - US has 20% of all global places in dataset
+  - Categories are highly diverse (2,079 unique categories)
+  - Meta is the primary data contributor
+  - Over half of places have high confidence scores (0.8+)
+
+
+================================================================================
+## THEME STATISTICS: DIVISIONS
+================================================================================
+
+**Total Features**: 4,426,044 divisions + 1,035,749 division areas + 87,375 division boundaries = 5,549,168 total
+
+**Divisions by Administrative Level**:
+  - Locality: 3,885,043 (70.01%) - DOMINANT category
+  - Neighborhood: 968,146 (17.45%)
+  - Microhood: 289,099 (5.21%)
+  - Macrohood: 193,758 (3.49%)
+  - County: 157,014 (2.83%)
+  - Localadmin: 38,014 (0.69%)
+  - Region: 16,782 (0.30%)
+  - Country: 1,154 (0.02%)
+  - Dependency: 158 (0.00%)
+
+**Divisions by Settlement Class**:
+  - Hamlet: 1,625,909 (37.49%) - Very small settlements
+  - Village: 1,473,786 (33.98%)
+  - Land (non-maritime): 1,117,097 (25.75%)
+  - Town: 102,959 (2.37%)
+  - City: 11,691 (0.27%)
+  - Maritime: 6,027 (0.14%)
+
+**Divisions by Country** (Top 15):
+  - China: 509,671 (9.19%)
+  - India: 400,947 (7.23%)
+  - France: 366,020 (6.60%)
+  - Russia: 334,362 (6.03%)
+  - United States: 267,073 (4.81%)
+  - Japan: 246,574 (4.45%)
+  - Brazil: 180,485 (3.25%)
+  - Poland: 154,404 (2.78%)
+  - Germany: 150,947 (2.72%)
+  - Indonesia: 144,350 (2.60%)
+  - Spain: 133,790 (2.41%)
+  - Italy: 117,104 (2.11%)
+  - Ireland: 107,125 (1.93%)
+  - Turkey: 99,174 (1.79%)
+  - Mexico: 87,896 (1.58%)
+  - Remaining 256 countries: ~44%
+
+**Data Sources**:
+  - OpenStreetMap: 5,509,100 (99.28%) - NEAR UNIVERSAL source
+  - geoBoundaries: 28,348 (0.51%)
+  - Other sources: <0.2%
+
+**Release Comparison** (vs. baseline):
+  - All features: Unchanged (100.00%)
+
+**Key Insights**:
+  - Localities and neighborhoods comprise 87% of all divisions
+  - Hamlets and villages are most common settlement types
+  - China and India have highest division counts
+  - OpenStreetMap provides nearly all division data
+
+
+================================================================================
+## THEME STATISTICS: TRANSPORTATION
+================================================================================
+
+**Total Features**: 327,025,730 segments + 383,075,438 connectors = 710,101,168 total
+
+**Segments by Transportation Mode**:
+  - Road: 325,028,031 (99.39%) - OVERWHELMINGLY dominant
+  - Rail: 1,969,440 (0.60%)
+  - Water: 28,259 (0.01%)
+
+**Road Segments by Class** (Top 15):
+  - Residential: 125,698,481 (38.44%) - LARGEST category
+  - Service: 57,642,931 (17.63%)
+  - Unclassified: 29,598,013 (9.05%)
+  - Track: 25,187,115 (7.70%)
+  - Footway: 21,614,295 (6.61%)
+  - Tertiary: 20,125,635 (6.15%)
+  - Path: 13,455,216 (4.11%)
+  - Secondary: 11,104,850 (3.40%)
+  - Primary: 7,171,816 (2.19%)
+  - Trunk: 3,996,224 (1.22%)
+  - Living Street: 3,322,367 (1.02%)
+  - Steps: 1,863,964 (0.57%)
+  - Unknown: 1,656,227 (0.51%)
+  - Standard Gauge (rail): 1,429,962 (0.44%)
+  - Cycleway: 1,329,598 (0.41%)
+
+**Road Segments by Subclass**:
+Note: Only 10% of segments have a subclass designation
+  - Driveway: 16,639,987 (50.72% of subclassed roads)
+  - Parking Aisle: 6,322,008 (19.27%)
+  - Sidewalk: 3,532,386 (10.77%)
+  - Link (ramps): 2,368,650 (7.22%)
+  - Crosswalk: 2,189,913 (6.67%)
+  - Alley: 1,700,121 (5.18%)
+  - Cycle Crossing: 57,084 (0.17%)
+
+**Data Sources**:
+  - OpenStreetMap: 709,164,749 (99.87%) - NEAR UNIVERSAL source
+  - TomTom: 936,419 (0.13%)
+
+**Release Comparison** (vs. baseline):
+  - All features: Unchanged (100.00%)
+
+**Key Insights**:
+  - Road network dominates (99.4% of segments)
+  - Residential roads are most common (38% of all roads)
+  - Service roads, tracks, and footways are next most common
+  - OpenStreetMap is the primary data source
+  - Connectors (intersection points) outnumber segments
+
+
+================================================================================
+## THEME STATISTICS: BASE
+================================================================================
+
+**Total Features**: 758,163,415 base features across 6 types
+
+**Feature Type Breakdown**:
+  - Infrastructure: 137,307,251
+  - Land: 67,999,352
+  - Land Cover: 123,302,114
+  - Land Use: 51,237,224
+  - Water: 60,856,842
+  - Bathymetry: 59,963
+
+**Features by Subtype** (Top 15):
+  - Power: 88,513,164 (11.68%) - Electrical infrastructure
+  - Tree: 63,446,138 (8.37%)
+  - Barrier: 60,811,038 (8.02%) - Fences, walls, gates
+  - Forest: 54,657,687 (7.21%)
+  - Stream: 54,391,040 (7.17%)
+  - Shrub: 46,673,403 (6.16%)
+  - Transportation: 45,265,148 (5.97%)
+  - Water: 34,554,156 (4.56%)
+  - Agriculture: 34,468,028 (4.55%)
+  - Transit: 33,994,652 (4.48%)
+  - Grass: 22,342,967 (2.95%)
+  - Residential: 20,058,674 (2.65%)
+  - Barren: 18,648,040 (2.46%)
+  - Wetland: 15,090,061 (1.99%)
+  - Bridge: 14,407,074 (1.90%)
+
+**Features by Class** (Top 15):
+  - Tree: 59,793,826 (9.42%)
+  - Stream: 54,391,040 (8.57%)
+  - Power Tower: 34,898,982 (5.50%)
+  - Power Pole: 34,275,096 (5.40%)
+  - Water: 32,320,756 (5.09%)
+  - Wood: 23,064,594 (3.63%)
+  - Crossing: 22,637,764 (3.57%)
+  - Farmland: 21,547,028 (3.39%)
+  - Residential: 19,823,480 (3.12%)
+  - Fence: 17,069,910 (2.69%)
+  - Bridge: 13,970,096 (2.20%)
+  - Grass: 12,871,418 (2.03%)
+  - Parking: 12,272,284 (1.93%)
+  - Gate: 12,093,128 (1.91%)
+  - Forest: 11,560,632 (1.82%)
+
+**Data Sources**:
+  - OpenStreetMap: 634,801,338 (83.73%)
+  - ESA WorldCover: 123,302,114 (16.26%) - Satellite-derived land cover
+  - ETOPO/GLOBathy: 59,963 (0.01%) - Ocean depth data
+
+**Release Comparison** (vs. baseline):
+  - Total Change: +0.53%
+  - Added: 1,728,020 (0.39%)
+  - Removed: 142,300 (0.03%)
+  - Data Changed: 3,496,036 (0.79%)
+  - Unchanged: 435,538,690 (98.81%)
+
+**Key Insights**:
+  - Infrastructure (power, barriers, transportation) dominates
+  - Natural features (trees, forests, streams) are well represented
+  - Land cover data from ESA provides global vegetation classification
+  - Base theme had modest updates in this release (1.19% affected)
+
+
+================================================================================
+<<<PROMPTS_START>>>
+## SUGGESTED EXPLORATION PROMPTS
+================================================================================
+
+Use these prompts to begin exploring the Overture Maps data. Each prompt is
+designed to leverage the statistics and schema information in this document.
+
+### Geographic Distribution Queries
+
+1. "Which countries have the highest concentration of Places data? Show me the
+   top 10 countries and their percentages."
+
+2. "Compare the distribution of Divisions data across China, India, and the
+   United States. Which country has the most administrative divisions?"
+
+3. "What percentage of global building data comes from each data source (Google,
+   Microsoft, OpenStreetMap)?"
+
+### Data Quality & Confidence
+
+4. "What proportion of Places have high confidence scores (0.8 or above)? How
+   many places are marked as permanently closed (confidence = 0.0)?"
+
+5. "In the Buildings theme, how much data changed between releases? What
+   percentage of buildings had attribute updates?"
+
+### Category & Classification Analysis
+
+6. "What are the top 10 most common building types globally? What percentage
+   does residential housing represent?"
+
+7. "For the Places theme, list the top 15 primary categories. How diverse is
+   the category distribution?"
+
+8. "In Transportation, what's the breakdown between road, rail, and water
+   segments? What are the most common road classes?"
+
+### Comparative Insights
+
+9. "Compare the data source distribution across all six themes. Which theme
+   relies most heavily on OpenStreetMap?"
+
+10. "Across all themes, which had the most changes in the 2025-08-20.1 release?
+    Which themes were completely unchanged?"
+
+### Specialized Queries
+
+11. "In the Base theme, what are the top infrastructure features? How many
+    power-related features exist?"
+
+12. "For the Divisions theme, what's the distribution across administrative
+    levels? What percentage are localities vs neighborhoods?"
+
+13. "In Transportation, how many road segments have a subclass designation?
+    What are the most common subclasses?"
+
+14. "Explain the relationship between building 'subtype' and 'class'. Give
+    examples of how they differ."
+
+15. "What does the 'confidence' score mean in the Places theme? How should I
+    interpret a confidence of 0.5 vs 0.9?"
+
+<<<PROMPTS_END>>>
+
+
+================================================================================
+## DATA LIMITATIONS & CONSIDERATIONS
+================================================================================
+
+**Geographic Coverage Gaps**:
+  - Addresses: Only 34 countries currently covered (out of 195+ globally)
+  - Places: US has 20% of all places; coverage varies significantly by country
+  - Data density varies by region based on source data availability
+
+**Data Source Biases**:
+  - Urban areas generally have better coverage than rural areas
+  - Developed countries have more comprehensive data than developing countries
+  - OpenStreetMap coverage depends on contributor activity in each region
+
+**Confidence & Quality**:
+  - Places confidence scores should guide usage decisions
+  - Machine learning-derived buildings may have classification errors
+  - Multiple data sources provide validation but may also introduce conflicts
+
+**Temporal Considerations**:
+  - Data reflects snapshot at release date (2025-08-20)
+  - "Unchanged" doesn't mean data is current, only that it didn't change between releases
+  - Real-world changes may not yet be reflected in the dataset
+
+**Schema Complexity**:
+  - Some themes have very diverse categorical values (e.g., 2,079 place categories)
+  - Address level meanings vary significantly by country
+  - Not all features have complete attribute data
+
+
+================================================================================
+## TECHNICAL NOTES
+================================================================================
+
+**Data Format**:
+  - Released as GeoParquet files for efficient spatial queries
+  - Schema defined in JSON format
+  - GeoJSON is the canonical geospatial representation
+
+**File Organization**:
+  - Data partitioned by theme, then by type within theme
+  - Metrics organized in row_counts subdirectories
+  - Changelog statistics track release-to-release changes
+
+**Statistical Methodology**:
+  - Counts represent aggregated totals across all CSV partition files
+  - Percentages calculated against theme-specific totals
+  - Change statistics compare current release vs previous baseline
+
+
+================================================================================
+## ADDITIONAL RESOURCES
+================================================================================
+
+**Official Documentation**:
+  - Overture Maps Documentation: https://docs.overturemaps.org/
+  - Schema Reference: https://docs.overturemaps.org/schema/reference/
+  - Data Guides: https://docs.overturemaps.org/guides/
+
+**Data Sources**:
+  - OpenStreetMap: https://www.openstreetmap.org/
+  - ESA WorldCover: https://worldcover.esa.int/
+  - Overture GitHub: https://github.com/OvertureMaps/data
+
+**Related Projects**:
+  - Overture Maps Foundation: https://overturemaps.org/
+  - Linux Foundation Announcement: https://www.linuxfoundation.org/press/overture-maps-foundation-releases-general-availability-of-its-open-maps-datasets
+
+================================================================================
+END OF DOCUMENT
+================================================================================

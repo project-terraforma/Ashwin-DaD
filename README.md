@@ -22,11 +22,11 @@ This approach will allow any user to load the file into an LLM and immediately b
 
 ## What the Repo Includes
 
-  * `generator_script.py`: The Python script responsible for connecting to the Overture data source, performing statistical analysis, and compiling the final, comprehensive text file.
-  * `README_generation_output.txt`: The resulting human- and LLM-readable text file containing the data schema, statistics, and prompts. This is the primary output file for user interaction.
-  * `config.yaml`: Configuration file for database connection strings and parameters for statistical analysis.
-  * `preliminary_prompts.txt`: A list of the predefined, context-setting prompts that get injected into the final output file.
-  * `requirements.txt`: List of required Python packages to run the `generator_script.py`.
+  * `generate_llm_context.py`: The main Python script that analyzes Overture metrics CSV files and generates the comprehensive LLM-readable context document.
+  * `analyze_metrics.py`: Helper script for detailed statistical analysis of metrics data (optional for debugging).
+  * `README_generation_output.txt`: The resulting human- and LLM-readable text file containing the data schema, statistics, and prompts. This is the primary output file for user interaction. **This file is auto-generated - do not edit manually.**
+  * `Metrics/metrics/`: Directory containing Overture metrics data organized by release date.
+  * `requirements.txt`: List of required Python packages (pandas, glob, pathlib).
 
 -----
 
@@ -36,7 +36,7 @@ This approach will allow any user to load the file into an LLM and immediately b
 
     ```bash
     git clone [repository-url]
-    cd Project-D
+    cd Ashwin-DaD
     ```
 
 2.  **Set up the environment:**
@@ -45,21 +45,36 @@ This approach will allow any user to load the file into an LLM and immediately b
     pip install -r requirements.txt
     ```
 
-3.  **Configure the database connection:**
+3.  **Ensure Metrics data is present:**
 
-      * Open `config.yaml`.
-      * Update the database connection string with your credentials and Overture data source details.
+      * The `Metrics/metrics/` directory should contain Overture metrics CSV files organized by release date.
+      * The script automatically detects the latest release.
 
 4.  **Generate the LLM-readable file:**
 
     ```bash
-    python generator_script.py
+    python3 generate_llm_context.py
     ```
 
-    This script will generate (or update) the `README_generation_output.txt` file.
+    This script will:
+    - Analyze all metrics CSV files from the latest release
+    - Extract schema information and statistics
+    - Generate (or update) the `README_generation_output.txt` file
+    - Report file size and completion status
 
 5.  **Start your LLM investigation:**
 
       * Copy the entire contents of `README_generation_output.txt`.
       * Paste the content directly into the prompt/context window of your preferred LLM (e.g., ChatGPT, Claude, Gemini).
-      * Begin asking your natural language questions about the Overture data\! The pre-injected prompts will help set the context for the LLM.
+      * Begin asking your natural language questions about the Overture data! The pre-injected prompts will help set the context for the LLM.
+
+## Example Usage
+
+After generating the context file, you can ask questions like:
+
+- "Which countries have the highest concentration of Places data?"
+- "What percentage of buildings are residential vs commercial?"
+- "How has the data changed in this release compared to the previous one?"
+- "What are the most common road types in the Transportation theme?"
+
+The LLM will use the statistics and schema information in the context document to provide accurate, data-driven answers.

@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LLM Data Explorer | Overture Maps</title>
+    <link rel="icon" href="https://docs.overturemaps.org/img/favicon.png">
+    <!-- Reuse Overture's CSS from the original page -->
+    <link rel="stylesheet" href="https://docs.overturemaps.org/assets/css/styles.71367b8b.css">
+
+    <style>
+        /* Additional custom styles */
+        .custom-container {
+            max-width: 900px;
+            margin: 2rem auto;
+            padding: 0 1.5rem;
+        }
+
+        .llm-hero {
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            border: 2px solid #2e8555;
+            border-radius: 12px;
+            padding: 2.5rem;
+            margin: 2rem 0;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .llm-hero h2 {
+            color: #1c1e21;
+            margin-top: 0;
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+
+        .stat-box {
+            background: white;
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid #dadde1;
+        }
+
+        .stat-number {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: #2e8555;
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            color: #606770;
+            margin-top: 0.25rem;
+        }
+
+        .btn-download {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: #2e8555;
+            color: white;
+            padding: 0.875rem 1.75rem;
+            border-radius: 6px;
+            font-weight: 600;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.05rem;
+            transition: all 0.2s ease;
+            margin-top: 1.5rem;
+        }
+
+        .btn-download:hover {
+            background: #1d6042;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(46, 133, 85, 0.3);
+            color: white;
+        }
+
+        .btn-download:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .status-msg {
+            padding: 1rem;
+            border-radius: 6px;
+            margin-top: 1rem;
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .status-msg.show { display: block; }
+        .status-success { background: #d1fae5; border: 1px solid #6ee7b7; color: #065f46; }
+        .status-error { background: #fee2e2; border: 1px solid #fca5a5; color: #991b1b; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .feature-list {
+            background: #f6f8fa;
+            border-left: 4px solid #2e8555;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            border-radius: 4px;
+        }
+
+        .feature-list ul {
+            margin: 0.5rem 0 0 1.25rem;
+            padding: 0;
+        }
+
+        .feature-list li {
+            margin-bottom: 0.5rem;
+            line-height: 1.6;
+        }
+
+        .usage-section {
+            background: white;
+            border: 1px solid #dadde1;
+            border-radius: 8px;
+            padding: 2rem;
+            margin: 2rem 0;
+        }
+
+        .usage-section h3 {
+            color: #1c1e21;
+            margin-top: 0;
+        }
+
+        .usage-section ol {
+            margin-left: 1.5rem;
+            line-height: 1.8;
+        }
+
+        .usage-section code {
+            background: #f6f8fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        th, td {
+            padding: 0.875rem;
+            text-align: left;
+            border-bottom: 1px solid #dadde1;
+        }
+
+        th {
+            background: #f6f8fa;
+            font-weight: 600;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Copy header from original Overture page -->
+    <nav aria-label="Main" class="theme-layout-navbar navbar navbar--fixed-top">
+        <div class="navbar__inner">
+            <div class="theme-layout-navbar-left navbar__items">
+                <a href="https://overturemaps.org" target="_blank" rel="noopener noreferrer" class="navbar__brand">
+                    <div class="navbar__logo">
+                        <img src="https://docs.overturemaps.org/img/omf_logo_transparent.png" alt="Overture Maps Foundation Logo">
+                    </div>
+                    <b class="navbar__title text--truncate">Overture Maps</b>
+                </a>
+                <a class="navbar__item navbar__link" href="https://docs.overturemaps.org/">Docs</a>
+                <a class="navbar__item navbar__link" href="https://docs.overturemaps.org/schema/">Schema Reference</a>
+                <a class="navbar__item navbar__link" href="https://docs.overturemaps.org/blog/">Blog</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="main-wrapper" style="padding-top: 60px;">
+        <div class="custom-container">
+            <h1>LLM Data Explorer</h1>
+            <p style="font-size: 1.1rem; color: #606770; margin-bottom: 2rem;">
+                Explore Overture Maps data through natural language using Large Language Models.
+                Download a comprehensive, AI-ready context file that enables intelligent querying
+                of our geospatial datasets.
+            </p>
+
+            <!-- Hero Section -->
+            <div class="llm-hero">
+                <h2>Generate LLM Context File</h2>
+                <p style="margin-bottom: 1rem;">
+                    Get instant access to a comprehensive document containing statistics,
+                    schema definitions, and pre-written prompts for all Overture themes.
+                </p>
+
+                <div class="stats-grid">
+                    <div class="stat-box">
+                        <span class="stat-number">6</span>
+                        <span class="stat-label">Data Themes</span>
+                    </div>
+                    <div class="stat-box">
+                        <span class="stat-number">7B+</span>
+                        <span class="stat-label">Features</span>
+                    </div>
+                    <div class="stat-box">
+                        <span class="stat-number">22 KB</span>
+                        <span class="stat-label">File Size</span>
+                    </div>
+                    <div class="stat-box">
+                        <span class="stat-number">~10K</span>
+                        <span class="stat-label">Tokens</span>
+                    </div>
+                </div>
+
+                <button id="downloadBtn" class="btn-download" onclick="downloadFile()">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                    </svg>
+                    Generate & Download
+                </button>
+
+                <div id="statusMsg" class="status-msg"></div>
+            </div>
+
+            <!-- What's Included -->
+            <div class="usage-section">
+                <h3>📦 What's Included</h3>
+                <div class="feature-list">
+                    <ul>
+                        <li><strong>Schema Definitions</strong> - Detailed descriptions of all 14 grouping columns</li>
+                        <li><strong>Theme Statistics</strong> - Complete breakdowns for all 6 themes (Addresses, Buildings, Places, Divisions, Transportation, Base)</li>
+                        <li><strong>Data Distributions</strong> - Top categorical values with counts and percentages</li>
+                        <li><strong>Release Comparisons</strong> - Changes from previous releases</li>
+                        <li><strong>Pre-written Prompts</strong> - 16 example queries to get started immediately</li>
+                        <li><strong>Source Attribution</strong> - Data source distributions and documentation links</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- How to Use -->
+            <div class="usage-section">
+                <h3>How to Use</h3>
+                <ol>
+                    <li>Click <strong>"Generate & Download"</strong> to download the LLM context file</li>
+                    <li>Open the downloaded <code>README_generation_output.txt</code> file</li>
+                    <li>Copy the entire contents of the file</li>
+                    <li>Paste into your preferred LLM (ChatGPT, Claude, Gemini, etc.)</li>
+                    <li>Start asking questions about Overture Maps data!</li>
+                </ol>
+            </div>
+
+            <!-- Example Queries -->
+            <div class="usage-section">
+                <h3>Example Queries</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 30%;">Category</th>
+                            <th>Example Question</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Geographic</strong></td>
+                            <td>"Which countries have the highest concentration of Places data?"</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Data Quality</strong></td>
+                            <td>"What proportion of places have high confidence scores (≥0.8)?"</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Categories</strong></td>
+                            <td>"What are the top 10 most common building types globally?"</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Comparisons</strong></td>
+                            <td>"How much data changed in this release vs the previous?"</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Statistics</strong></td>
+                            <td>"What percentage of buildings are residential vs commercial?"</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Technical Info -->
+            <div class="usage-section">
+                <h3>Technical Details</h3>
+                <table>
+                    <tbody>
+                        <tr>
+                            <td style="width: 35%;"><strong>Release Version</strong></td>
+                            <td><code>2025-09-24.0</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>File Format</strong></td>
+                            <td>Plain text (.txt)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>File Size</strong></td>
+                            <td>~22 KB</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Token Count</strong></td>
+                            <td>~10,000 tokens (fits in all modern LLM context windows)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Generation Method</strong></td>
+                            <td>Automated Python script analyzing metrics CSV files</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Update Frequency</strong></td>
+                            <td>Monthly (aligned with Overture releases)</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer footer--dark" style="margin-top: 4rem;">
+        <div class="container container-fluid">
+            <div class="footer__bottom text--center">
+                <div class="footer__copyright">
+                    Copyright © 2025 Overture Maps Foundation |
+                    <a href="https://docs.overturemaps.org" style="color: #60a5fa;">Documentation</a> |
+                    <a href="https://github.com/OvertureMaps" style="color: #60a5fa;">GitHub</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        async function downloadFile() {
+            const btn = document.getElementById('downloadBtn');
+            const status = document.getElementById('statusMsg');
+
+            // Disable button and show loading
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner"></span> Generating...';
+
+            // Show info message
+            status.className = 'status-msg show';
+            status.style.background = '#dbeafe';
+            status.style.border = '1px solid #93c5fd';
+            status.style.color = '#1e40af';
+            status.textContent = 'Generating LLM context file from metrics data...';
+
+            try {
+                // Fetch the pre-generated file
+                const response = await fetch('README_generation_output.txt');
+
+                if (!response.ok) {
+                    throw new Error('File not found. Please run: python3 generate_llm_context.py');
+                }
+
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'README_generation_output.txt';
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+
+                // Show success message
+                status.className = 'status-msg status-success show';
+                status.innerHTML = `
+                    <strong>✅ Success!</strong> Your LLM context file has been downloaded.<br>
+                    <small>Open the file and copy its contents into your preferred LLM to start exploring Overture Maps data.</small>
+                `;
+
+            } catch (error) {
+                // Show error message
+                status.className = 'status-msg status-error show';
+                status.innerHTML = `
+                    <strong>❌ Error:</strong> ${error.message}<br>
+                    <small>Make sure the file exists in the same directory as this HTML page.</small>
+                `;
+            } finally {
+                // Re-enable button
+                btn.disabled = false;
+                btn.innerHTML = `
+                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                    </svg>
+                    Generate & Download
+                `;
+            }
+        }
+    </script>
+</body>
+</html>
