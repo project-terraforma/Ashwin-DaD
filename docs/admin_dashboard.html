@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Feedback Admin Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #f5f5f5;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: #1c1e21;
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            color: #606770;
+            margin-bottom: 2rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .stat-card h3 {
+            color: #606770;
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #2e8555;
+        }
+
+        .section {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+
+        .section h2 {
+            color: #1c1e21;
+            margin-bottom: 1rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        th, td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        th {
+            background: #f6f8fa;
+            font-weight: 600;
+            color: #1c1e21;
+        }
+
+        tr:hover {
+            background: #f9f9f9;
+        }
+
+        .rating-stars {
+            color: #fbbf24;
+        }
+
+        .chart-container {
+            margin-top: 1rem;
+        }
+
+        .bar-chart {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .bar-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .bar-label {
+            min-width: 200px;
+            font-weight: 500;
+        }
+
+        .bar-visual {
+            flex: 1;
+            height: 30px;
+            background: #2e8555;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            padding: 0 0.5rem;
+            color: white;
+            font-weight: 600;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            color: #606770;
+        }
+
+        .error {
+            background: #fee2e2;
+            border: 1px solid #fca5a5;
+            color: #991b1b;
+            padding: 1rem;
+            border-radius: 6px;
+            margin-bottom: 1rem;
+        }
+
+        .refresh-btn {
+            background: #2e8555;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .refresh-btn:hover {
+            background: #1d6042;
+        }
+
+        .timestamp {
+            color: #606770;
+            font-size: 0.85rem;
+        }
+
+        .feedback-text {
+            max-width: 400px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .export-btn {
+            background: white;
+            color: #2e8555;
+            border: 2px solid #2e8555;
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-left: 1rem;
+        }
+
+        .export-btn:hover {
+            background: #2e8555;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Feedback Dashboard</h1>
+        <p class="subtitle">LLM Data Explorer User Feedback</p>
+
+        <div style="margin-bottom: 2rem;">
+            <button class="refresh-btn" onclick="loadData()">🔄 Refresh Data</button>
+            <button class="export-btn" onclick="exportToCSV()">📥 Export CSV</button>
+        </div>
+
+        <div id="errorMessage" class="error" style="display: none;"></div>
+
+        <div id="statsSection">
+            <div class="loading">Loading statistics...</div>
+        </div>
+
+        <div id="chartsSection">
+            <div class="loading">Loading charts...</div>
+        </div>
+
+        <div id="feedbackSection">
+            <div class="loading">Loading feedback...</div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:5000/api';
+
+        async function loadData() {
+            try {
+                document.getElementById('errorMessage').style.display = 'none';
+
+                // Load stats
+                const statsResponse = await fetch(`${API_BASE_URL}/feedback/stats`);
+                const statsData = await statsResponse.json();
+                displayStats(statsData);
+
+                // Load all feedback
+                const feedbackResponse = await fetch(`${API_BASE_URL}/feedback`);
+                const feedbackData = await feedbackResponse.json();
+                displayFeedback(feedbackData.feedback);
+                displayCharts(statsData);
+
+            } catch (error) {
+                console.error('Error loading data:', error);
+                const errorDiv = document.getElementById('errorMessage');
+                errorDiv.textContent = `Error: Could not connect to API at ${API_BASE_URL}. Make sure the Flask server is running.`;
+                errorDiv.style.display = 'block';
+            }
+        }
+
+        function displayStats(data) {
+            const html = `
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <h3>Total Responses</h3>
+                        <div class="stat-value">${data.total_responses}</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Avg Satisfaction</h3>
+                        <div class="stat-value">${data.average_satisfaction.toFixed(1)} <span style="font-size: 1.2rem; color: #fbbf24;">★</span></div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Avg Clarity</h3>
+                        <div class="stat-value">${data.average_clarity.toFixed(1)} / 5</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Most Used LLM</h3>
+                        <div class="stat-value" style="font-size: 1.2rem;">${data.llm_providers[0]?.llm_provider || 'N/A'}</div>
+                    </div>
+                </div>
+            `;
+            document.getElementById('statsSection').innerHTML = html;
+        }
+
+        function displayCharts(data) {
+            const maxCount = Math.max(...data.llm_providers.map(p => p.count));
+
+            const llmChart = data.llm_providers.map(item => `
+                <div class="bar-item">
+                    <div class="bar-label">${item.llm_provider}</div>
+                    <div class="bar-visual" style="width: ${(item.count / maxCount) * 100}%">
+                        ${item.count}
+                    </div>
+                </div>
+            `).join('');
+
+            const maxAnswered = Math.max(...data.questions_answered.map(q => q.count));
+            const answeredChart = data.questions_answered.map(item => `
+                <div class="bar-item">
+                    <div class="bar-label">${item.questions_answered}</div>
+                    <div class="bar-visual" style="width: ${(item.count / maxAnswered) * 100}%">
+                        ${item.count}
+                    </div>
+                </div>
+            `).join('');
+
+            const html = `
+                <div class="section">
+                    <h2>LLM Provider Distribution</h2>
+                    <div class="chart-container">
+                        <div class="bar-chart">
+                            ${llmChart}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h2>Questions Answered</h2>
+                    <div class="chart-container">
+                        <div class="bar-chart">
+                            ${answeredChart}
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.getElementById('chartsSection').innerHTML = html;
+        }
+
+        function displayFeedback(feedback) {
+            const rows = feedback.map(item => {
+                const stars = '★'.repeat(item.satisfaction) + '☆'.repeat(5 - item.satisfaction);
+                return `
+                    <tr>
+                        <td class="timestamp">${new Date(item.timestamp).toLocaleString()}</td>
+                        <td><span class="rating-stars">${stars}</span></td>
+                        <td>${item.clarity}/5</td>
+                        <td>${item.llm_provider}</td>
+                        <td>${item.questions_answered}</td>
+                        <td class="feedback-text" title="${item.improvements}">${item.improvements || '-'}</td>
+                    </tr>
+                `;
+            }).join('');
+
+            const html = `
+                <div class="section">
+                    <h2>Recent Feedback (${feedback.length} total)</h2>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Timestamp</th>
+                                <th>Satisfaction</th>
+                                <th>Clarity</th>
+                                <th>LLM Provider</th>
+                                <th>Answered Questions</th>
+                                <th>Improvements</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${rows}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            document.getElementById('feedbackSection').innerHTML = html;
+        }
+
+        async function exportToCSV() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/feedback`);
+                const data = await response.json();
+
+                // Create CSV content
+                const headers = ['ID', 'Timestamp', 'Satisfaction', 'Clarity', 'LLM Provider', 'Questions Answered', 'Improvements', 'Conversation'];
+                const rows = data.feedback.map(item => [
+                    item.id,
+                    item.timestamp,
+                    item.satisfaction,
+                    item.clarity,
+                    item.llm_provider,
+                    item.questions_answered,
+                    `"${(item.improvements || '').replace(/"/g, '""')}"`,
+                    `"${(item.conversation || '').replace(/"/g, '""')}"`
+                ]);
+
+                const csv = [
+                    headers.join(','),
+                    ...rows.map(row => row.join(','))
+                ].join('\n');
+
+                // Download CSV
+                const blob = new Blob([csv], { type: 'text/csv' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `feedback_export_${new Date().toISOString().split('T')[0]}.csv`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+
+            } catch (error) {
+                console.error('Error exporting CSV:', error);
+                alert('Error exporting CSV. Make sure the API server is running.');
+            }
+        }
+
+        // Load data on page load
+        loadData();
+
+        // Auto-refresh every 30 seconds
+        setInterval(loadData, 30000);
+    </script>
+</body>
+</html>

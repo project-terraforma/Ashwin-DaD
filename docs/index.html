@@ -187,6 +187,227 @@
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
+
+        /* Feedback Modal Styles */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 1000;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .feedback-modal {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            max-width: 600px;
+            width: 90%;
+            max-height: 85vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .feedback-modal h2 {
+            color: #1c1e21;
+            margin-top: 0;
+            margin-bottom: 0.5rem;
+            font-size: 1.75rem;
+        }
+
+        .feedback-modal .subtitle {
+            color: #606770;
+            margin-bottom: 1.5rem;
+            font-size: 0.95rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #1c1e21;
+        }
+
+        .form-group .optional {
+            color: #606770;
+            font-weight: 400;
+            font-size: 0.9rem;
+        }
+
+        .form-group input[type="text"],
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #dadde1;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-family: inherit;
+            box-sizing: border-box;
+        }
+
+        .form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #2e8555;
+            box-shadow: 0 0 0 3px rgba(46, 133, 85, 0.1);
+        }
+
+        .star-rating {
+            display: flex;
+            gap: 0.5rem;
+            font-size: 2rem;
+        }
+
+        .star {
+            cursor: pointer;
+            color: #dadde1;
+            transition: color 0.2s ease;
+        }
+
+        .star:hover,
+        .star.active {
+            color: #fbbf24;
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .radio-option {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .radio-option input[type="radio"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .scale-group {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .scale-option {
+            flex: 1;
+            text-align: center;
+            padding: 0.75rem;
+            border: 2px solid #dadde1;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-weight: 600;
+        }
+
+        .scale-option:hover {
+            border-color: #2e8555;
+            background: #f0f9ff;
+        }
+
+        .scale-option.selected {
+            background: #2e8555;
+            color: white;
+            border-color: #2e8555;
+        }
+
+        .scale-labels {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 0.5rem;
+            font-size: 0.85rem;
+            color: #606770;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .btn-submit,
+        .btn-skip {
+            flex: 1;
+            padding: 0.875rem 1.5rem;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s ease;
+        }
+
+        .btn-submit {
+            background: #2e8555;
+            color: white;
+        }
+
+        .btn-submit:hover:not(:disabled) {
+            background: #1d6042;
+            transform: translateY(-2px);
+        }
+
+        .btn-submit:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-skip {
+            background: white;
+            color: #606770;
+            border: 1px solid #dadde1;
+        }
+
+        .btn-skip:hover {
+            background: #f6f8fa;
+        }
+
+        .thank-you {
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .thank-you h3 {
+            color: #2e8555;
+            margin-bottom: 1rem;
+        }
     </style>
 </head>
 <body>
@@ -364,7 +585,118 @@
         </div>
     </footer>
 
+    <!-- Feedback Modal -->
+    <div id="feedbackModal" class="modal-overlay">
+        <div class="feedback-modal">
+            <div id="feedbackForm">
+                <h2>📝 Quick Feedback</h2>
+                <p class="subtitle">Help us improve the LLM Data Explorer! Your feedback is anonymous and takes less than 2 minutes.</p>
+
+                <form id="surveyForm">
+                    <!-- Question 1: Overall Satisfaction -->
+                    <div class="form-group">
+                        <label>Overall, how satisfied are you with the LLM Data Explorer?</label>
+                        <div class="star-rating" id="satisfaction">
+                            <span class="star" data-value="1">★</span>
+                            <span class="star" data-value="2">★</span>
+                            <span class="star" data-value="3">★</span>
+                            <span class="star" data-value="4">★</span>
+                            <span class="star" data-value="5">★</span>
+                        </div>
+                        <input type="hidden" name="satisfaction" id="satisfactionValue" required>
+                    </div>
+
+                    <!-- Question 2: Instruction Clarity -->
+                    <div class="form-group">
+                        <label>How clear were the instructions?</label>
+                        <div class="scale-group" id="clarity">
+                            <div class="scale-option" data-value="1">1</div>
+                            <div class="scale-option" data-value="2">2</div>
+                            <div class="scale-option" data-value="3">3</div>
+                            <div class="scale-option" data-value="4">4</div>
+                            <div class="scale-option" data-value="5">5</div>
+                        </div>
+                        <div class="scale-labels">
+                            <span>Not clear</span>
+                            <span>Very clear</span>
+                        </div>
+                        <input type="hidden" name="clarity" id="clarityValue" required>
+                    </div>
+
+                    <!-- Question 3: LLM Provider -->
+                    <div class="form-group">
+                        <label>Which LLM provider did you use?</label>
+                        <select name="llm_provider" required>
+                            <option value="">Select an option...</option>
+                            <option value="ChatGPT (OpenAI)">ChatGPT (OpenAI)</option>
+                            <option value="Claude (Anthropic)">Claude (Anthropic)</option>
+                            <option value="Gemini (Google)">Gemini (Google)</option>
+                            <option value="Copilot (Microsoft)">Copilot (Microsoft)</option>
+                            <option value="Perplexity">Perplexity</option>
+                            <option value="Local LLM (Ollama, LM Studio, etc.)">Local LLM (Ollama, LM Studio, etc.)</option>
+                            <option value="Other">Other</option>
+                            <option value="Haven't used it yet">Haven't used it yet</option>
+                        </select>
+                    </div>
+
+                    <!-- Question 4: Questions Answered -->
+                    <div class="form-group">
+                        <label>Did the LLM context file help answer your questions about Overture data?</label>
+                        <div class="radio-group">
+                            <div class="radio-option">
+                                <input type="radio" name="questions_answered" value="Yes" id="answered_yes" required>
+                                <label for="answered_yes">Yes</label>
+                            </div>
+                            <div class="radio-option">
+                                <input type="radio" name="questions_answered" value="Partially" id="answered_partial">
+                                <label for="answered_partial">Partially</label>
+                            </div>
+                            <div class="radio-option">
+                                <input type="radio" name="questions_answered" value="No" id="answered_no">
+                                <label for="answered_no">No</label>
+                            </div>
+                            <div class="radio-option">
+                                <input type="radio" name="questions_answered" value="Haven't tried yet" id="answered_not_tried">
+                                <label for="answered_not_tried">Haven't tried yet</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Question 5: Improvements -->
+                    <div class="form-group">
+                        <label>What could be improved? <span class="optional">(Optional)</span></label>
+                        <textarea name="improvements" placeholder="Tell us what would make this better..."></textarea>
+                    </div>
+
+                    <!-- Question 6: Share Conversation -->
+                    <div class="form-group">
+                        <label>Share your LLM conversation <span class="optional">(Optional)</span></label>
+                        <textarea name="conversation" placeholder="Paste a snippet or summary of your conversation with the LLM here. This helps us understand how people are using the tool."></textarea>
+                    </div>
+
+                    <!-- Submit Buttons -->
+                    <div class="button-group">
+                        <button type="button" class="btn-skip" onclick="closeFeedbackModal()">Skip for now</button>
+                        <button type="submit" class="btn-submit">Submit Feedback</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Thank You Message (hidden initially) -->
+            <div id="thankYouMessage" style="display: none;">
+                <div class="thank-you">
+                    <h3>🎉 Thank you!</h3>
+                    <p>Your feedback has been submitted successfully. We really appreciate you taking the time to help us improve the LLM Data Explorer.</p>
+                    <button class="btn-submit" onclick="closeFeedbackModal()" style="margin-top: 1.5rem;">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
+        // ============================================
+        // Download File Function
+        // ============================================
         async function downloadFile() {
             const btn = document.getElementById('downloadBtn');
             const status = document.getElementById('statusMsg');
@@ -398,6 +730,10 @@
                 window.URL.revokeObjectURL(url);
                 document.body.removeChild(a);
 
+                // Mark that user downloaded the file
+                localStorage.setItem('llm_explorer_downloaded', 'true');
+                localStorage.setItem('llm_explorer_download_time', Date.now());
+
                 // Show success message
                 status.className = 'status-msg status-success show';
                 status.innerHTML = `
@@ -423,6 +759,206 @@
                 `;
             }
         }
+
+        // ============================================
+        // Feedback Modal Functions
+        // ============================================
+
+        // API Configuration
+        const API_BASE_URL = 'http://localhost:5000/api';
+
+        function showFeedbackModal() {
+            const modal = document.getElementById('feedbackModal');
+            modal.classList.add('show');
+        }
+
+        function closeFeedbackModal() {
+            const modal = document.getElementById('feedbackModal');
+            modal.classList.remove('show');
+            localStorage.setItem('llm_explorer_feedback_shown', 'true');
+        }
+
+        // Star rating interaction
+        document.addEventListener('DOMContentLoaded', function() {
+            const stars = document.querySelectorAll('#satisfaction .star');
+            const satisfactionInput = document.getElementById('satisfactionValue');
+
+            stars.forEach(star => {
+                star.addEventListener('click', function() {
+                    const value = this.getAttribute('data-value');
+                    satisfactionInput.value = value;
+
+                    // Update star display
+                    stars.forEach(s => {
+                        if (parseInt(s.getAttribute('data-value')) <= parseInt(value)) {
+                            s.classList.add('active');
+                        } else {
+                            s.classList.remove('active');
+                        }
+                    });
+                });
+
+                // Hover effect
+                star.addEventListener('mouseenter', function() {
+                    const value = this.getAttribute('data-value');
+                    stars.forEach(s => {
+                        if (parseInt(s.getAttribute('data-value')) <= parseInt(value)) {
+                            s.style.color = '#fbbf24';
+                        } else {
+                            s.style.color = '#dadde1';
+                        }
+                    });
+                });
+            });
+
+            // Reset hover on mouse leave
+            document.getElementById('satisfaction').addEventListener('mouseleave', function() {
+                const currentValue = satisfactionInput.value;
+                stars.forEach(s => {
+                    if (currentValue && parseInt(s.getAttribute('data-value')) <= parseInt(currentValue)) {
+                        s.style.color = '#fbbf24';
+                    } else {
+                        s.style.color = '#dadde1';
+                    }
+                });
+            });
+
+            // Scale selection interaction
+            const scaleOptions = document.querySelectorAll('#clarity .scale-option');
+            const clarityInput = document.getElementById('clarityValue');
+
+            scaleOptions.forEach(option => {
+                option.addEventListener('click', function() {
+                    const value = this.getAttribute('data-value');
+                    clarityInput.value = value;
+
+                    // Update selection display
+                    scaleOptions.forEach(o => o.classList.remove('selected'));
+                    this.classList.add('selected');
+                });
+            });
+
+            // Form submission
+            document.getElementById('surveyForm').addEventListener('submit', async function(e) {
+                e.preventDefault();
+
+                const formData = new FormData(this);
+                const submitBtn = this.querySelector('.btn-submit');
+
+                // Disable submit button
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Submitting...';
+
+                try {
+                    // Prepare data for API
+                    const feedbackData = {
+                        satisfaction: parseInt(formData.get('satisfaction')),
+                        clarity: parseInt(formData.get('clarity')),
+                        llm_provider: formData.get('llm_provider'),
+                        questions_answered: formData.get('questions_answered'),
+                        improvements: formData.get('improvements') || '',
+                        conversation: formData.get('conversation') || ''
+                    };
+
+                    // Submit to Flask API
+                    const response = await fetch(`${API_BASE_URL}/feedback`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(feedbackData)
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Failed to submit feedback');
+                    }
+
+                    const result = await response.json();
+                    console.log('Feedback submitted successfully:', result);
+
+                    // Show thank you message
+                    document.getElementById('feedbackForm').style.display = 'none';
+                    document.getElementById('thankYouMessage').style.display = 'block';
+
+                    // Mark feedback as submitted
+                    localStorage.setItem('llm_explorer_feedback_submitted', 'true');
+
+                } catch (error) {
+                    console.error('Error submitting feedback:', error);
+
+                    // Fallback: Store locally if API fails
+                    const feedbackData = {
+                        timestamp: new Date().toISOString(),
+                        satisfaction: formData.get('satisfaction'),
+                        clarity: formData.get('clarity'),
+                        llm_provider: formData.get('llm_provider'),
+                        questions_answered: formData.get('questions_answered'),
+                        improvements: formData.get('improvements'),
+                        conversation: formData.get('conversation')
+                    };
+
+                    const existingFeedback = JSON.parse(localStorage.getItem('llm_explorer_feedback_data') || '[]');
+                    existingFeedback.push(feedbackData);
+                    localStorage.setItem('llm_explorer_feedback_data', JSON.stringify(existingFeedback));
+
+                    alert('Could not connect to server. Your feedback has been saved locally and will be submitted when the server is available.');
+                } finally {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Submit Feedback';
+                }
+            });
+        });
+
+        // ============================================
+        // Page Visibility Detection
+        // ============================================
+        document.addEventListener('DOMContentLoaded', function() {
+            let hasLeftPage = false;
+
+            // Check if user has downloaded the file and hasn't submitted feedback yet
+            function shouldShowFeedback() {
+                const hasDownloaded = localStorage.getItem('llm_explorer_downloaded') === 'true';
+                const feedbackSubmitted = localStorage.getItem('llm_explorer_feedback_submitted') === 'true';
+                const feedbackShown = localStorage.getItem('llm_explorer_feedback_shown') === 'true';
+
+                // Optional: Only show after 5 minutes have passed since download
+                const downloadTime = parseInt(localStorage.getItem('llm_explorer_download_time') || '0');
+                const fiveMinutes = 5 * 60 * 1000;
+                const enoughTimePassed = Date.now() - downloadTime > fiveMinutes;
+
+                return hasDownloaded && !feedbackSubmitted && !feedbackShown && enoughTimePassed;
+            }
+
+            // Detect when user leaves the page
+            document.addEventListener('visibilitychange', function() {
+                if (document.hidden) {
+                    hasLeftPage = true;
+                } else if (hasLeftPage && shouldShowFeedback()) {
+                    // User has returned to the page
+                    setTimeout(() => {
+                        showFeedbackModal();
+                    }, 1000); // Small delay for better UX
+                }
+            });
+
+            // Alternative: Show feedback after a certain time on page (fallback)
+            if (shouldShowFeedback()) {
+                setTimeout(() => {
+                    // Only show if modal hasn't been shown via visibility change
+                    if (!document.getElementById('feedbackModal').classList.contains('show')) {
+                        showFeedbackModal();
+                    }
+                }, 30000); // 30 seconds
+            }
+        });
+
+        // Close modal when clicking outside of it
+        document.addEventListener('click', function(e) {
+            const modal = document.getElementById('feedbackModal');
+            if (e.target === modal) {
+                closeFeedbackModal();
+            }
+        });
     </script>
 </body>
 </html>
