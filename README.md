@@ -2,7 +2,7 @@
 
 **Empowering users to explore Overture Maps data through natural language using Large Language Models**
 
-[![Live Demo](https://img.shields.io/badge/Live%20Demo-GitHub%20Pages-blue)](https://ashwinprabou.github.io/Ashwin-DaD/)
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-GitHub%20Pages-blue)](https://project-terraforma.github.io/Ashwin-DaD/)
 
 ---
 
@@ -83,7 +83,7 @@ Ashwin-DaD/
 
 ### Option 1: Use the Live Website (Easiest)
 
-Visit the live site: **https://ashwinprabou.github.io/Ashwin-DaD/**
+Visit the live site: **https://project-terraforma.github.io/Ashwin-DaD/**
 
 1. Click "Generate & Download"
 2. Open the downloaded file
@@ -94,7 +94,7 @@ Visit the live site: **https://ashwinprabou.github.io/Ashwin-DaD/**
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/ashwinprabou/Ashwin-DaD.git
+git clone https://github.com/project-terraforma/Ashwin-DaD.git
 cd Ashwin-DaD
 
 # 2. Install dependencies
@@ -192,7 +192,7 @@ git push origin main
 # Settings → Pages → Source: main branch → /docs folder → Save
 ```
 
-Your site will be live at: `https://ashwinprabou.github.io/Ashwin-DaD/`
+Your site will be live at: `https://project-terraforma.github.io/Ashwin-DaD/`
 
 ### Backend API (Vercel - Recommended)
 
@@ -249,13 +249,7 @@ The feedback system captures anonymous user satisfaction and usability data.
 open docs/admin_dashboard.html
 ```
 
-**Option 2: API Endpoints**
-```bash
-curl https://ashwin-terraforma-d.vercel.app/api/feedback/stats
-curl https://ashwin-terraforma-d.vercel.app/api/feedback
-```
-
-**Option 3: Direct Database**
+**Option 2: Direct Database**
 ```bash
 sqlite3 docs/feedback.db "SELECT * FROM feedback ORDER BY timestamp DESC;"
 ```
@@ -354,7 +348,7 @@ This project is part of the Overture Maps Foundation initiative.
 
 ---
 
-**Live Site:** https://ashwinprabou.github.io/Ashwin-DaD/
+**Live Site:** https://project-terraforma.github.io/Ashwin-DaD/
 
 ---
 
