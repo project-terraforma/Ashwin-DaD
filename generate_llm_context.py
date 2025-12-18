@@ -28,11 +28,12 @@ COLUMN_DEFINITIONS = {
         'definition': "Feature's status compared to the previous Overture release",
         'type': 'Enumerated string',
         'values': {
-            'unchanged': 'Feature exists in both releases with identical data',
-            'data_changed': 'Feature exists in both but has modified attributes',
+            'unchanged': 'Feature exists in both releases with identical data (ALL attributes are exactly the same)',
+            'data_changed': 'Feature exists in both but has modified attributes (e.g., coordinates, names, categories, confidence scores, or ANY other attribute changed)',
             'added': 'New feature in this release',
             'removed': 'Feature existed in previous release but not current'
-        }
+        },
+        'notes': 'Low unchanged counts mean many features had attribute updates between releases. This is normal for dynamic data. DO NOT assume low unchanged values are related to operating hours or other temporal data not present in this dataset.'
     },
     'country': {
         'definition': 'ISO 3166-1 Alpha-2 country code',
@@ -86,7 +87,7 @@ COLUMN_DEFINITIONS = {
         'definition': 'Numerical score indicating certainty of place existence',
         'type': 'Float (0.0 to 1.0)',
         'interpretation': '1.0 = verified/confirmed; 0.5-0.8 = moderate confidence; 0.0 = permanently closed or does not exist',
-        'notes': 'This is NOT operating hours; it is existence certainty'
+        'notes': 'This score ONLY indicates whether a place exists or is closed. It does NOT represent operating hours, business hours, opening times, or any temporal availability. The data contains NO information about when places are open or closed during the day.'
     }
 }
 
@@ -319,6 +320,14 @@ def generate_document():
         f.write("- All statistics represent aggregated counts across multiple data sources\n")
         f.write("- Some themes may have data quality variations by geographic region\n")
         f.write("- Confidence scores in Places theme range from 0.0 (closed/doesn't exist) to 1.0 (verified)\n\n")
+
+        f.write("## CRITICAL: DO NOT MAKE ASSUMPTIONS\n")
+        f.write("- ONLY use information explicitly provided in this document\n")
+        f.write("- DO NOT infer or assume attributes not mentioned in the schema definitions\n")
+        f.write("- DO NOT guess about data that might exist (e.g., operating hours, phone numbers, emails)\n")
+        f.write("- If a user asks about data not covered in this document, clearly state it is not available\n")
+        f.write("- When uncertain, say 'This information is not provided in the available data'\n")
+        f.write("- Example: This data does NOT include operating hours, contact information, or real-time status\n\n")
 
         f.write("<<<INSTRUCTIONS_END>>>\n\n\n")
 
